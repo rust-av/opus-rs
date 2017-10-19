@@ -1,4 +1,4 @@
-# libvpx bindings
+# libopus bindings
 
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
