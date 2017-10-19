@@ -1,0 +1,25 @@
+[package]
+name = "libopus"
+version = "0.1.0"
+authors = ["Luca Barbato <lu_zero@gentoo.org>"]
+license = "MIT"
+description = "libopus bindings"
+repository = "https://github.com/rust-av/opus-rs"
+readme = "README.md"
+keywords = ["libopus","opus"]
+
+[features]
+codec-trait = ["av-codec"]
+
+[dependencies]
+opus-sys = { version = "0.1.0", path = "opus-sys" }
+av-data = { version = "0.1.0", path = "../rust-av/data" }
+av-codec = { version = "0.1.0", path = "../rust-av/codec", optional = true }
+
+[workspace]
+members = ["opus-sys"]
+
+[[example]]
+name = "encode"
+path = "examples/encode.rs"
+
