@@ -1,6 +1,5 @@
 use ffi::opus::*;
 use common::*;
-use data::value::Value;
 
 use std::ptr;
 
@@ -42,7 +41,7 @@ impl Decoder {
     pub fn decode<'a, I, O>(&mut self, input: I, out: O, decode_fec: bool) -> Result<(), ErrorCode>
     where
         I: Into<Option<&'a [u8]>>,
-        O: Into<&'a mut AudioBuffer>,
+        O: Into<AudioBufferMut<'a>>,
     {
         let (data, len) = input.into().map_or(
             (ptr::null(), 0),
@@ -50,7 +49,7 @@ impl Decoder {
         );
 
         let ret = match out.into() {
-            &mut AudioBuffer::F32(ref mut v) => unsafe {
+            AudioBufferMut::F32(v) => unsafe {
                 opus_multistream_decode_float(
                     self.dec,
                     data,
@@ -60,7 +59,7 @@ impl Decoder {
                     decode_fec as i32,
                 )
             },
-            &mut AudioBuffer::I16(ref mut v) => unsafe {
+            AudioBufferMut::I16(v) => unsafe {
                 opus_multistream_decode(
                     self.dec,
                     data,
@@ -75,14 +74,10 @@ impl Decoder {
         if ret < 0 { Err(ret.into()) } else { Ok(()) }
     }
 
-    // TODO: rename to set() and add a get() -> Result<Value> ?
-    pub fn control<'a, V>(&mut self, key: u32, val: V) -> Result<(), ErrorCode>
-    where
-        V: Into<Value<'a>>,
-    {
-        let ret = match (key, val.into()) {
-            (OPUS_SET_GAIN_REQUEST, Value::I64(v)) => unsafe {
-                opus_multistream_decoder_ctl(self.dec, key as i32, v)
+    pub fn set_option(&mut self, key: u32, val: i32) -> Result<(), ErrorCode> {
+        let ret = match key {
+            OPUS_SET_GAIN_REQUEST => unsafe {
+                opus_multistream_decoder_ctl(self.dec, key as i32, val)
             },
             _ => unimplemented!(),
         };

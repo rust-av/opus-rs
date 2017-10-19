@@ -40,19 +40,36 @@ impl From<i32> for ErrorCode {
     }
 }
 
-pub enum AudioBuffer {
-    F32(Vec<f32>),
-    I16(Vec<i16>),
+pub enum AudioBuffer<'a> {
+    F32(&'a [f32]),
+    I16(&'a [i16]),
 }
 
-impl From<Vec<i16>> for AudioBuffer {
-    fn from(v: Vec<i16>) -> Self {
+impl<'a> From<&'a [i16]> for AudioBuffer<'a> {
+    fn from(v: &'a [i16]) -> Self {
         AudioBuffer::I16(v)
     }
 }
 
-impl From<Vec<f32>> for AudioBuffer {
-    fn from(v: Vec<f32>) -> Self {
+impl<'a> From<&'a [f32]> for AudioBuffer<'a> {
+    fn from(v: &'a [f32]) -> Self {
         AudioBuffer::F32(v)
+    }
+}
+
+pub enum AudioBufferMut<'a> {
+    F32(&'a mut [f32]),
+    I16(&'a mut [i16]),
+}
+
+impl<'a> From<&'a mut [f32]> for AudioBufferMut<'a> {
+    fn from(v: &'a mut [f32]) -> Self {
+        AudioBufferMut::F32(v)
+    }
+}
+
+impl<'a> From<&'a mut [i16]> for AudioBufferMut<'a> {
+    fn from(v: &'a mut [i16]) -> Self {
+        AudioBufferMut::I16(v)
     }
 }
