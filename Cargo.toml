@@ -9,11 +9,12 @@ readme = "README.md"
 keywords = ["libopus","opus"]
 
 [features]
-codec-trait = ["av-codec"]
+codec-trait = ["av-codec", "av-bitstream"]
 
 [dependencies]
 opus-sys = { version = "0.1.0", path = "opus-sys" }
 av-data = { version = "0.1.0", path = "../rust-av/data" }
+av-bitstream = { version = "0.1.0", path = "../rust-av/bitstream", optional = true }
 av-codec = { version = "0.1.0", path = "../rust-av/codec", optional = true }
 
 [workspace]
