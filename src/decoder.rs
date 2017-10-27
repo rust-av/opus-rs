@@ -38,7 +38,7 @@ impl Decoder {
         }
     }
 
-    pub fn decode<'a, I, O>(&mut self, input: I, out: O, decode_fec: bool) -> Result<(), ErrorCode>
+    pub fn decode<'a, I, O>(&mut self, input: I, out: O, decode_fec: bool) -> Result<usize, ErrorCode>
     where
         I: Into<Option<&'a [u8]>>,
         O: Into<AudioBufferMut<'a>>,
@@ -71,7 +71,7 @@ impl Decoder {
             },
         };
 
-        if ret < 0 { Err(ret.into()) } else { Ok(()) }
+        if ret < 0 { Err(ret.into()) } else { Ok(ret as usize) }
     }
 
     pub fn set_option(&mut self, key: u32, val: i32) -> Result<(), ErrorCode>
