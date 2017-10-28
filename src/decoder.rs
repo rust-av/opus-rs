@@ -166,7 +166,13 @@ mod decoder_trait {
             }
 
             match ret {
-                Ok(_) => { self.pending.push_back(f); Ok(()) },
+                Ok(samples) => {
+                    if let MediaKind::Audio(ref mut info) = f.kind {
+                        info.samples = samples;
+                    }
+                    self.pending.push_back(f);
+                    Ok(())
+                },
                 Err(e) => Err(e)
             }
         }
