@@ -110,7 +110,7 @@ mod decoder_trait {
     use data::frame::*;
     use data::audiosample::formats::S16;
     use data::audiosample::ChannelMap;
-    use std::rc::Rc;
+    use std::sync::Arc;
     use std::collections::VecDeque;
     use ffi::opus::OPUS_SET_GAIN_REQUEST;
 
@@ -121,7 +121,7 @@ mod decoder_trait {
     struct Dec {
         dec: Option<OpusDecoder>,
         extradata: Option<Vec<u8>>,
-        pending: VecDeque<Frame>,
+        pending: VecDeque<ArcFrame>,
         info: AudioInfo,
     }
 
@@ -134,7 +134,7 @@ mod decoder_trait {
                     samples: 960 * 6,
                     rate: 48000,
                     map: ChannelMap::new(),
-                    format: Rc::new(S16)
+                    format: Arc::new(S16)
                 }
             }
         }
@@ -157,31 +157,31 @@ mod decoder_trait {
             self.extradata = Some(Vec::from(extra));
         }
         fn send_packet(&mut self, pkt: &Packet) -> Result<()> {
-            let mut f = new_default_frame(self.info.clone(), None);
+            let mut f = new_default_frame(self.info.clone(), Some(pkt.t.clone()));
 
-            let ret;
-            {
+            let ret = {
                 let buf : &mut [i16] = f.buf.as_mut_slice(0).unwrap();
-                ret = self.dec.as_mut().unwrap()
+
+                self.dec.as_mut().unwrap()
                     .decode(pkt.data.as_slice(), buf, false)
-                    .map_err(|_e| ErrorKind::InvalidData.into());
-            }
+                    .map_err(|_e| ErrorKind::InvalidData.into())
+            };
 
             match ret {
                 Ok(samples) => {
                     if let MediaKind::Audio(ref mut info) = f.kind {
                         info.samples = samples;
                     }
-                    self.pending.push_back(f);
+                    self.pending.push_back(Arc::new(f));
                     Ok(())
                 },
                 Err(e) => Err(e)
             }
         }
-        fn receive_frame(&mut self) -> Result<Frame> {
+        fn receive_frame(&mut self) -> Result<ArcFrame> {
             self.pending.pop_front().ok_or(ErrorKind::MoreDataNeeded.into())
         }
-        fn reset(&mut self) -> Result<()> {
+        fn configure(&mut self) -> Result<()> {
             let channels;
             let sample_rate = 48000;
             let mut gain_db = 0;
@@ -230,6 +230,11 @@ mod decoder_trait {
                 },
                 Err(_) => Err(ErrorKind::InvalidConfiguration.into())
             }
+        }
+
+        fn flush(&mut self) -> Result<()> {
+            self.dec.as_mut().unwrap().reset();
+            Ok(())
         }
     }
 
