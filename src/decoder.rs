@@ -8,6 +8,8 @@ pub struct Decoder {
     channels: usize,
 }
 
+unsafe impl Send for Decoder {} // TODO: Make sure it cannot be abused
+
 impl Decoder {
     pub fn create(
         sample_rate: usize,

@@ -6,6 +6,8 @@ pub struct Encoder {
     channels: usize,
 }
 
+unsafe impl Send for Encoder {} // TODO: Make sure it cannot be abused
+
 #[repr(i32)]
 pub enum Application {
     Voip = OPUS_APPLICATION_VOIP as i32,
