@@ -104,8 +104,8 @@ impl Encoder {
             OPUS_SET_GAIN_REQUEST |
             OPUS_SET_LSB_DEPTH_REQUEST |
             OPUS_SET_EXPERT_FRAME_DURATION_REQUEST |
-            OPUS_SET_PREDICTION_DISABLED_REQUEST |
-            OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST => unsafe {
+            OPUS_SET_PREDICTION_DISABLED_REQUEST /* |
+            OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST */ => unsafe {
                 opus_multistream_encoder_ctl(self.enc, key as i32, val)
             },
             _ => unimplemented!(),

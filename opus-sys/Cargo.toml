@@ -13,6 +13,6 @@ bindgen = "0.30"
 metadeps = "1.1"
 
 [package.metadata.pkg-config]
-opus = "1.2.1"
+opus = "1.1"
 
 [dependencies]
