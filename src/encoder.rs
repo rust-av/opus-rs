@@ -265,7 +265,7 @@ mod encoder_trait {
         }
 
         fn receive_packet(&mut self) -> Result<Packet> {
-            self.pending.pop_front().ok_or(ErrorKind::MoreDataNeeded.into())
+            self.pending.pop_front().ok_or(Error::MoreDataNeeded)
         }
 
         fn set_option<'a>(&mut self, key: &str, val: Value<'a>) -> Result<()> {
@@ -279,7 +279,7 @@ mod encoder_trait {
                     if let Some(a) = Application::from_str(s) {
                         self.cfg.application = Some(a);
                     } else {
-                        return Err(ErrorKind::InvalidData.into());
+                        return Err(Error::InvalidData);
                     }
                 },
                 _ => unimplemented!(),

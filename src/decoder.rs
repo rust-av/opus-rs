@@ -164,7 +164,7 @@ mod decoder_trait {
 
                 self.dec.as_mut().unwrap()
                     .decode(pkt.data.as_slice(), buf, false)
-                    .map_err(|_e| ErrorKind::InvalidData.into())
+                    .map_err(|_e| Error::InvalidData)
             };
 
             match ret {
@@ -179,7 +179,7 @@ mod decoder_trait {
             }
         }
         fn receive_frame(&mut self) -> Result<ArcFrame> {
-            self.pending.pop_front().ok_or(ErrorKind::MoreDataNeeded.into())
+            self.pending.pop_front().ok_or(Error::MoreDataNeeded)
         }
         fn configure(&mut self) -> Result<()> {
             let channels;
@@ -206,14 +206,14 @@ mod decoder_trait {
                     mapping = &extradata[OPUS_HEAD_SIZE + 2 ..]
                 } else {
                     if channels > 2 || channel_map {
-                        return Err(ErrorKind::InvalidConfiguration.into());
+                        return Err(Error::ConfigurationInvalid);
                     }
                     if channels > 1 {
                         coupled_streams = 1;
                     }
                 }
             } else {
-                return Err(ErrorKind::ConfigurationIncomplete.into());
+                return Err(Error::ConfigurationIncomplete);
             }
 
             if channels > 2 {
@@ -228,7 +228,7 @@ mod decoder_trait {
                     self.dec = Some(d);
                     Ok(())
                 },
-                Err(_) => Err(ErrorKind::InvalidConfiguration.into())
+                Err(_) => Err(Error::ConfigurationInvalid)
             }
         }
 
