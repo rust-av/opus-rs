@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["libopus","opus"]
 
 [features]
+default = ["codec-trait"]
 codec-trait = ["av-codec", "av-bitstream", "av-data"]
 
 [dependencies]
