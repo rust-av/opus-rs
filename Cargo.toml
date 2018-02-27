@@ -14,9 +14,9 @@ codec-trait = ["av-codec", "av-bitstream", "av-data"]
 
 [dependencies]
 opus-sys = { version = "0.1.0", path = "opus-sys" }
-av-data = { version = "0.1.0", path = "../rust-av/data", optional = true }
-av-bitstream = { version = "0.1.0", path = "../rust-av/bitstream", optional = true }
-av-codec = { version = "0.1.0", path = "../rust-av/codec", optional = true }
+av-data = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
+av-bitstream = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
+av-codec = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
 
 [workspace]
 members = ["opus-sys"]
