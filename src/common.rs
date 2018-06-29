@@ -4,7 +4,7 @@ use std::ffi::CStr;
 use std::i32;
 
 #[repr(i32)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum ErrorCode {
     BadArg = OPUS_BAD_ARG,
     BufferTooSmall = OPUS_BUFFER_TOO_SMALL,

@@ -9,6 +9,7 @@ pub struct Encoder {
 unsafe impl Send for Encoder {} // TODO: Make sure it cannot be abused
 
 #[repr(i32)]
+#[derive(Clone, Copy, Debug)]
 pub enum Application {
     Voip = OPUS_APPLICATION_VOIP as i32,
     Audio = OPUS_APPLICATION_AUDIO as i32,
@@ -113,7 +114,7 @@ impl Encoder {
 
         if ret < 0 { Err(ret.into()) } else { Ok(()) }
     }
-    pub fn get_option(&mut self, key: u32) -> Result<i32, ErrorCode> {
+    pub fn get_option(&self, key: u32) -> Result<i32, ErrorCode> {
         let mut val: i32 = 0;
         let ret = match key {
             OPUS_GET_LOOKAHEAD_REQUEST => unsafe {
@@ -143,12 +144,13 @@ mod encoder_trait {
     // use std::rc::Rc;
     use codec::encoder::*;
     use codec::error::*;
-    // use data::audiosample::Soniton;
-    // use data::audiosample::formats::S16;
+    use data::audiosample::ChannelMap;
+    use data::audiosample::formats::S16;
     use data::value::Value;
     use data::frame::{ArcFrame, MediaKind, FrameBufferConv};
     use data::packet::Packet;
     use data::rational::Rational64;
+    use data::params::CodecParams;
     use std::collections::VecDeque;
 
     struct Des {
@@ -160,7 +162,7 @@ mod encoder_trait {
         streams: usize,
         coupled_streams: usize,
         mapping: Vec<u8>,
-        application: Option<Application>,
+        application: Application,
     }
 
     impl Cfg {
@@ -173,6 +175,7 @@ mod encoder_trait {
         enc: Option<OpusEncoder>,
         pending: VecDeque<Packet>,
         frame_size: usize,
+        delay: usize,
         cfg: Cfg,
     }
 
@@ -182,7 +185,8 @@ mod encoder_trait {
                 enc: None,
                 pending: VecDeque::new(),
                 frame_size: 0,
-                cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: Vec::new(), application: None }
+                delay: 0,
+                cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: vec![0, 1], application: Application::Audio }
             })
         }
 
@@ -199,11 +203,23 @@ mod encoder_trait {
     const MAX_FRAME_SIZE : usize = 1275;
     const MAX_FRAMES : usize = 3;
 
+    /// 80ms in samples
+    const CONVERGENCE_WINDOW: usize = 3840;
+
     impl Encoder for Enc {
         fn configure(&mut self) -> Result<()> {
+            use ffi::opus::OPUS_GET_LOOKAHEAD_REQUEST;
             if self.enc.is_none() {
                 if self.cfg.is_valid() {
-                    unimplemented!()
+                    let enc = OpusEncoder::create(48000, // TODO
+                        self.cfg.channels,
+                        self.cfg.streams,
+                        self.cfg.coupled_streams,
+                        &self.cfg.mapping,
+                        self.cfg.application).map_err(|_e| unimplemented!())?;
+                    self.delay = enc.get_option(OPUS_GET_LOOKAHEAD_REQUEST).unwrap() as usize;
+                    self.enc = Some(enc);
+                    Ok(())
                 } else {
                     unimplemented!()
                 }
@@ -211,9 +227,25 @@ mod encoder_trait {
                 unimplemented!()
             }
         }
-
+        // TODO: support multichannel
         fn get_extradata(&self) -> Option<Vec<u8>> {
-            unimplemented!()
+            use bitstream::bytewrite::*;
+            if self.cfg.channels > 2 {
+                unimplemented!();
+            }
+
+            let mut buf = b"OpusHead".to_vec();
+
+            buf.resize(19, 0);
+
+            buf[8] = 1;
+            buf[9] = self.cfg.channels as u8;
+            put_i16l(&mut buf[10..12], self.delay as i16);
+            put_i32l(&mut buf[12..16], 48000); // TODO
+            put_i16l(&mut buf[16..18], 0);
+            buf[18] = 0;
+
+            Some(buf)
         }
 
         fn send_frame(&mut self, frame: &ArcFrame) -> Result<()> {
@@ -277,7 +309,7 @@ mod encoder_trait {
                 ("coupled_streams", Value::U64(v)) => self.cfg.coupled_streams = v as usize,
                 ("application", Value::Str(s)) => {
                     if let Some(a) = Application::from_str(s) {
-                        self.cfg.application = Some(a);
+                        self.cfg.application = a;
                     } else {
                         return Err(Error::InvalidData);
                     }
@@ -287,6 +319,47 @@ mod encoder_trait {
 
             Ok(())
         }
+
+        fn set_params(&mut self, params: &CodecParams) -> Result<()> {
+            use data::params::*;
+            if let Some(MediaKind::Audio(ref info)) = params.kind {
+                if let Some(ref map) = info.map {
+                    if map.len() > 2 {
+                        unimplemented!()
+                    } else {
+                        self.cfg.channels = map.len();
+                        self.cfg.coupled_streams = self.cfg.channels - 1;
+                        self.cfg.streams = 1;
+                        self.cfg.mapping = if map.len() > 1 {
+                            vec![0, 1]
+                        } else {
+                            vec![0]
+                        };
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        // TODO: guard against calling it before configure()
+        // is issued.
+        fn get_params(&self) -> Result<CodecParams> {
+            use std::sync::Arc;
+            use data::params::*;
+            Ok(CodecParams {
+                kind: Some(MediaKind::Audio(AudioInfo {
+                    rate: 48000,
+                    map: Some(ChannelMap::default_map(2)),
+                    format: Some(Arc::new(S16)),
+                })),
+                codec_id: Some("opus".to_owned()),
+                extradata: self.get_extradata(),
+                bit_rate: 0, // TODO: expose the information
+                convergence_window: CONVERGENCE_WINDOW,
+                delay: self.delay,
+            })
+        }
+
         fn flush(&mut self) -> Result<()> {
             unimplemented!()
         }
