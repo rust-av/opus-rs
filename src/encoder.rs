@@ -314,7 +314,7 @@ mod encoder_trait {
                         return Err(Error::InvalidData);
                     }
                 },
-                _ => unimplemented!(),
+                _ => return Err(Error::Unsupported("Unsupported option".to_owned())),
             }
 
             Ok(())
