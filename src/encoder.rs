@@ -184,7 +184,7 @@ mod encoder_trait {
             Box::new(Enc {
                 enc: None,
                 pending: VecDeque::new(),
-                frame_size: 0,
+                frame_size: 960,
                 delay: 0,
                 cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: vec![0, 1], application: Application::Audio }
             })
