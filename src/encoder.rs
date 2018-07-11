@@ -361,7 +361,8 @@ mod encoder_trait {
         }
 
         fn flush(&mut self) -> Result<()> {
-            unimplemented!()
+            // unimplemented!()
+            Ok(())
         }
     }
 
