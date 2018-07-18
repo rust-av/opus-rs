@@ -6,6 +6,43 @@ pub struct Encoder {
     channels: usize,
 }
 
+pub use  ffi::opus::OPUS_SET_APPLICATION_REQUEST;
+pub use  ffi::opus::OPUS_SET_BITRATE_REQUEST ;
+pub use  ffi::opus::OPUS_SET_MAX_BANDWIDTH_REQUEST ;
+pub use  ffi::opus::OPUS_SET_VBR_REQUEST ;
+pub use  ffi::opus::OPUS_SET_BANDWIDTH_REQUEST ;
+pub use  ffi::opus::OPUS_SET_COMPLEXITY_REQUEST ;
+pub use  ffi::opus::OPUS_SET_INBAND_FEC_REQUEST ;
+pub use  ffi::opus::OPUS_SET_PACKET_LOSS_PERC_REQUEST ;
+pub use  ffi::opus::OPUS_SET_DTX_REQUEST ;
+pub use  ffi::opus::OPUS_SET_VBR_CONSTRAINT_REQUEST ;
+pub use  ffi::opus::OPUS_SET_FORCE_CHANNELS_REQUEST ;
+pub use  ffi::opus::OPUS_SET_SIGNAL_REQUEST ;
+pub use  ffi::opus::OPUS_SET_GAIN_REQUEST ;
+pub use  ffi::opus::OPUS_SET_LSB_DEPTH_REQUEST ;
+pub use  ffi::opus::OPUS_SET_EXPERT_FRAME_DURATION_REQUEST ;
+pub use  ffi::opus::OPUS_SET_PREDICTION_DISABLED_REQUEST;
+
+pub use ffi::opus::OPUS_GET_LOOKAHEAD_REQUEST;
+pub use ffi::opus::OPUS_GET_FINAL_RANGE_REQUEST;
+
+pub use ffi::opus::OPUS_BANDWIDTH_NARROWBAND;
+pub use ffi::opus::OPUS_BANDWIDTH_MEDIUMBAND;
+pub use ffi::opus::OPUS_BANDWIDTH_WIDEBAND;
+pub use ffi::opus::OPUS_BANDWIDTH_SUPERWIDEBAND;
+pub use ffi::opus::OPUS_BANDWIDTH_FULLBAND;
+pub use ffi::opus::OPUS_FRAMESIZE_ARG;
+pub use ffi::opus::OPUS_FRAMESIZE_2_5_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_5_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_10_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_20_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_40_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_60_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_80_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_100_MS;
+pub use ffi::opus::OPUS_FRAMESIZE_120_MS;
+
+
 unsafe impl Send for Encoder {} // TODO: Make sure it cannot be abused
 
 #[repr(i32)]
@@ -60,7 +97,7 @@ impl Encoder {
         }
     }
 
-    pub fn encode<'a, I>(&mut self, input: I, output: &mut [u8]) -> Result<(), ErrorCode>
+    pub fn encode<'a, I>(&mut self, input: I, output: &mut [u8]) -> Result<usize, ErrorCode>
     where
         I: Into<AudioBuffer<'a>>,
     {
@@ -85,7 +122,7 @@ impl Encoder {
             },
         };
 
-        if ret < 0 { Err(ret.into()) } else { Ok(()) }
+        if ret < 0 { Err(ret.into()) } else { Ok(ret as usize) }
     }
 
     pub fn set_option(&mut self, key: u32, val: u32) -> Result<(), ErrorCode> {
@@ -117,7 +154,8 @@ impl Encoder {
     pub fn get_option(&self, key: u32) -> Result<i32, ErrorCode> {
         let mut val: i32 = 0;
         let ret = match key {
-            OPUS_GET_LOOKAHEAD_REQUEST => unsafe {
+            OPUS_GET_LOOKAHEAD_REQUEST |
+            OPUS_GET_FINAL_RANGE_REQUEST => unsafe {
                 opus_multistream_encoder_ctl(self.enc, key as i32, &mut val as *mut i32)
             },
             _ => unimplemented!(),
@@ -177,6 +215,7 @@ mod encoder_trait {
         frame_size: usize,
         delay: usize,
         cfg: Cfg,
+        flushing: bool,
     }
 
     impl Descriptor for Des {
@@ -186,7 +225,8 @@ mod encoder_trait {
                 pending: VecDeque::new(),
                 frame_size: 960,
                 delay: 0,
-                cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: vec![0, 1], application: Application::Audio }
+                cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: vec![0, 1], application: Application::Audio },
+                flushing: false,
             })
         }
 
@@ -362,6 +402,7 @@ mod encoder_trait {
 
         fn flush(&mut self) -> Result<()> {
             // unimplemented!()
+            self.flushing = true;
             Ok(())
         }
     }
@@ -382,7 +423,4 @@ pub use self::encoder_trait::OPUS_DESCR;
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    #[test]
-    fn init() {
-    }
 }
