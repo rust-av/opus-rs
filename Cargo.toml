@@ -18,10 +18,9 @@ av-data = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optio
 av-bitstream = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
 av-codec = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
 
+[dev-dependencies]
+structopt = "0.2"
+av-bitstream = { version = "0.1.0", git = "https://github.com/rust-av/rust-av" }
+
 [workspace]
 members = ["opus-sys"]
-
-[[example]]
-name = "encode"
-path = "examples/encode.rs"
-
