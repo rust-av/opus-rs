@@ -6,42 +6,43 @@ pub struct Encoder {
     channels: usize,
 }
 
-pub use  ffi::opus::OPUS_SET_APPLICATION_REQUEST;
-pub use  ffi::opus::OPUS_SET_BITRATE_REQUEST ;
-pub use  ffi::opus::OPUS_SET_MAX_BANDWIDTH_REQUEST ;
-pub use  ffi::opus::OPUS_SET_VBR_REQUEST ;
-pub use  ffi::opus::OPUS_SET_BANDWIDTH_REQUEST ;
-pub use  ffi::opus::OPUS_SET_COMPLEXITY_REQUEST ;
-pub use  ffi::opus::OPUS_SET_INBAND_FEC_REQUEST ;
-pub use  ffi::opus::OPUS_SET_PACKET_LOSS_PERC_REQUEST ;
-pub use  ffi::opus::OPUS_SET_DTX_REQUEST ;
-pub use  ffi::opus::OPUS_SET_VBR_CONSTRAINT_REQUEST ;
-pub use  ffi::opus::OPUS_SET_FORCE_CHANNELS_REQUEST ;
-pub use  ffi::opus::OPUS_SET_SIGNAL_REQUEST ;
-pub use  ffi::opus::OPUS_SET_GAIN_REQUEST ;
-pub use  ffi::opus::OPUS_SET_LSB_DEPTH_REQUEST ;
-pub use  ffi::opus::OPUS_SET_EXPERT_FRAME_DURATION_REQUEST ;
-pub use  ffi::opus::OPUS_SET_PREDICTION_DISABLED_REQUEST;
+mod constants {
+    pub use  ffi::opus::OPUS_SET_APPLICATION_REQUEST;
+    pub use  ffi::opus::OPUS_SET_BITRATE_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_MAX_BANDWIDTH_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_VBR_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_BANDWIDTH_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_COMPLEXITY_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_INBAND_FEC_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_PACKET_LOSS_PERC_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_DTX_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_VBR_CONSTRAINT_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_FORCE_CHANNELS_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_SIGNAL_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_GAIN_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_LSB_DEPTH_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_EXPERT_FRAME_DURATION_REQUEST ;
+    pub use  ffi::opus::OPUS_SET_PREDICTION_DISABLED_REQUEST;
 
-pub use ffi::opus::OPUS_GET_LOOKAHEAD_REQUEST;
-pub use ffi::opus::OPUS_GET_FINAL_RANGE_REQUEST;
+    pub use ffi::opus::OPUS_GET_LOOKAHEAD_REQUEST;
+    pub use ffi::opus::OPUS_GET_FINAL_RANGE_REQUEST;
 
-pub use ffi::opus::OPUS_BANDWIDTH_NARROWBAND;
-pub use ffi::opus::OPUS_BANDWIDTH_MEDIUMBAND;
-pub use ffi::opus::OPUS_BANDWIDTH_WIDEBAND;
-pub use ffi::opus::OPUS_BANDWIDTH_SUPERWIDEBAND;
-pub use ffi::opus::OPUS_BANDWIDTH_FULLBAND;
-pub use ffi::opus::OPUS_FRAMESIZE_ARG;
-pub use ffi::opus::OPUS_FRAMESIZE_2_5_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_5_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_10_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_20_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_40_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_60_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_80_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_100_MS;
-pub use ffi::opus::OPUS_FRAMESIZE_120_MS;
-
+    pub use ffi::opus::OPUS_BANDWIDTH_NARROWBAND;
+    pub use ffi::opus::OPUS_BANDWIDTH_MEDIUMBAND;
+    pub use ffi::opus::OPUS_BANDWIDTH_WIDEBAND;
+    pub use ffi::opus::OPUS_BANDWIDTH_SUPERWIDEBAND;
+    pub use ffi::opus::OPUS_BANDWIDTH_FULLBAND;
+    pub use ffi::opus::OPUS_FRAMESIZE_ARG;
+    pub use ffi::opus::OPUS_FRAMESIZE_2_5_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_5_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_10_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_20_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_40_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_60_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_80_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_100_MS;
+    pub use ffi::opus::OPUS_FRAMESIZE_120_MS;
+}
 
 unsafe impl Send for Encoder {} // TODO: Make sure it cannot be abused
 
@@ -179,6 +180,7 @@ impl Drop for Encoder {
 mod encoder_trait {
     use super::Encoder as OpusEncoder;
     use super::Application;
+    use super::constants::*;
     // use std::rc::Rc;
     use codec::encoder::*;
     use codec::error::*;
@@ -201,6 +203,7 @@ mod encoder_trait {
         coupled_streams: usize,
         mapping: Vec<u8>,
         application: Application,
+        bitrate: usize,
     }
 
     impl Cfg {
@@ -225,7 +228,7 @@ mod encoder_trait {
                 pending: VecDeque::new(),
                 frame_size: 960,
                 delay: 0,
-                cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: vec![0, 1], application: Application::Audio },
+                cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: vec![0, 1], application: Application::Audio, bitrate: 16000 },
                 flushing: false,
             })
         }
@@ -251,12 +254,19 @@ mod encoder_trait {
             use ffi::opus::OPUS_GET_LOOKAHEAD_REQUEST;
             if self.enc.is_none() {
                 if self.cfg.is_valid() {
-                    let enc = OpusEncoder::create(48000, // TODO
+                    let mut enc = OpusEncoder::create(48000, // TODO
                         self.cfg.channels,
                         self.cfg.streams,
                         self.cfg.coupled_streams,
                         &self.cfg.mapping,
                         self.cfg.application).map_err(|_e| unimplemented!())?;
+                    enc.set_option(OPUS_SET_BITRATE_REQUEST, self.cfg.bitrate as u32).unwrap();
+                    enc.set_option(OPUS_SET_BANDWIDTH_REQUEST, OPUS_BANDWIDTH_WIDEBAND).unwrap();
+                    enc.set_option(OPUS_SET_COMPLEXITY_REQUEST, 10).unwrap();
+                    enc.set_option(OPUS_SET_VBR_REQUEST, 0).unwrap();
+                    enc.set_option(OPUS_SET_VBR_CONSTRAINT_REQUEST, 0).unwrap();
+                    enc.set_option(OPUS_SET_PACKET_LOSS_PERC_REQUEST, 0).unwrap();
+
                     self.delay = enc.get_option(OPUS_GET_LOOKAHEAD_REQUEST).unwrap() as usize;
                     self.enc = Some(enc);
                     Ok(())
