@@ -1,4 +1,4 @@
-use ffi::opus::*;
+use ffi::*;
 use common::*;
 
 pub struct Encoder {
@@ -7,42 +7,44 @@ pub struct Encoder {
 }
 
 mod constants {
-    pub use  ffi::opus::OPUS_SET_APPLICATION_REQUEST;
-    pub use  ffi::opus::OPUS_SET_BITRATE_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_MAX_BANDWIDTH_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_VBR_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_BANDWIDTH_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_COMPLEXITY_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_INBAND_FEC_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_PACKET_LOSS_PERC_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_DTX_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_VBR_CONSTRAINT_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_FORCE_CHANNELS_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_SIGNAL_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_GAIN_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_LSB_DEPTH_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_EXPERT_FRAME_DURATION_REQUEST ;
-    pub use  ffi::opus::OPUS_SET_PREDICTION_DISABLED_REQUEST;
+    pub use  ffi::OPUS_SET_APPLICATION_REQUEST;
+    pub use  ffi::OPUS_SET_BITRATE_REQUEST ;
+    pub use  ffi::OPUS_SET_MAX_BANDWIDTH_REQUEST ;
+    pub use  ffi::OPUS_SET_VBR_REQUEST ;
+    pub use  ffi::OPUS_SET_BANDWIDTH_REQUEST ;
+    pub use  ffi::OPUS_SET_COMPLEXITY_REQUEST ;
+    pub use  ffi::OPUS_SET_INBAND_FEC_REQUEST ;
+    pub use  ffi::OPUS_SET_PACKET_LOSS_PERC_REQUEST ;
+    pub use  ffi::OPUS_SET_DTX_REQUEST ;
+    pub use  ffi::OPUS_SET_VBR_CONSTRAINT_REQUEST ;
+    pub use  ffi::OPUS_SET_FORCE_CHANNELS_REQUEST ;
+    pub use  ffi::OPUS_SET_SIGNAL_REQUEST ;
+    pub use  ffi::OPUS_SET_GAIN_REQUEST ;
+    pub use  ffi::OPUS_SET_LSB_DEPTH_REQUEST ;
+    pub use  ffi::OPUS_SET_EXPERT_FRAME_DURATION_REQUEST ;
+    pub use  ffi::OPUS_SET_PREDICTION_DISABLED_REQUEST;
 
-    pub use ffi::opus::OPUS_GET_LOOKAHEAD_REQUEST;
-    pub use ffi::opus::OPUS_GET_FINAL_RANGE_REQUEST;
+    pub use ffi::OPUS_GET_LOOKAHEAD_REQUEST;
+    pub use ffi::OPUS_GET_FINAL_RANGE_REQUEST;
 
-    pub use ffi::opus::OPUS_BANDWIDTH_NARROWBAND;
-    pub use ffi::opus::OPUS_BANDWIDTH_MEDIUMBAND;
-    pub use ffi::opus::OPUS_BANDWIDTH_WIDEBAND;
-    pub use ffi::opus::OPUS_BANDWIDTH_SUPERWIDEBAND;
-    pub use ffi::opus::OPUS_BANDWIDTH_FULLBAND;
-    pub use ffi::opus::OPUS_FRAMESIZE_ARG;
-    pub use ffi::opus::OPUS_FRAMESIZE_2_5_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_5_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_10_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_20_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_40_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_60_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_80_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_100_MS;
-    pub use ffi::opus::OPUS_FRAMESIZE_120_MS;
+    pub use ffi::OPUS_BANDWIDTH_NARROWBAND;
+    pub use ffi::OPUS_BANDWIDTH_MEDIUMBAND;
+    pub use ffi::OPUS_BANDWIDTH_WIDEBAND;
+    pub use ffi::OPUS_BANDWIDTH_SUPERWIDEBAND;
+    pub use ffi::OPUS_BANDWIDTH_FULLBAND;
+    pub use ffi::OPUS_FRAMESIZE_ARG;
+    pub use ffi::OPUS_FRAMESIZE_2_5_MS;
+    pub use ffi::OPUS_FRAMESIZE_5_MS;
+    pub use ffi::OPUS_FRAMESIZE_10_MS;
+    pub use ffi::OPUS_FRAMESIZE_20_MS;
+    pub use ffi::OPUS_FRAMESIZE_40_MS;
+    pub use ffi::OPUS_FRAMESIZE_60_MS;
+    pub use ffi::OPUS_FRAMESIZE_80_MS;
+    pub use ffi::OPUS_FRAMESIZE_100_MS;
+    pub use ffi::OPUS_FRAMESIZE_120_MS;
 }
+
+pub use self::constants::*;
 
 unsafe impl Send for Encoder {} // TODO: Make sure it cannot be abused
 
@@ -251,7 +253,6 @@ mod encoder_trait {
 
     impl Encoder for Enc {
         fn configure(&mut self) -> Result<()> {
-            use ffi::opus::OPUS_GET_LOOKAHEAD_REQUEST;
             if self.enc.is_none() {
                 if self.cfg.is_valid() {
                     let mut enc = OpusEncoder::create(48000, // TODO

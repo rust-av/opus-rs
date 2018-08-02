@@ -1,4 +1,4 @@
-use ffi::opus::*;
+use ffi::*;
 use std::fmt;
 use std::ffi::CStr;
 use std::i32;

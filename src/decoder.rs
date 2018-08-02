@@ -1,4 +1,4 @@
-use ffi::opus::*;
+use ffi::*;
 use common::*;
 
 use std::ptr;
@@ -112,7 +112,7 @@ mod decoder_trait {
     use data::audiosample::ChannelMap;
     use std::sync::Arc;
     use std::collections::VecDeque;
-    use ffi::opus::OPUS_SET_GAIN_REQUEST;
+    use ffi::OPUS_SET_GAIN_REQUEST;
 
     struct Des {
         descr: Descr,
