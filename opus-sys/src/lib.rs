@@ -1,11 +1,13 @@
-// TODO do w/out the unions?
-#![feature(untagged_unions)]
+#![allow(dead_code)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
 
-pub mod opus;
+include!(concat!(env!("OUT_DIR"), "/opus.rs"));
 
 #[cfg(test)]
 mod tests {
-    use super::opus::*;
+    use super::*;
     use std::ffi::CStr;
     #[test]
     fn version() {

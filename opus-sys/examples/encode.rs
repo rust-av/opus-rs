@@ -3,7 +3,7 @@ extern crate opus_sys;
 extern crate structopt;
 extern crate av_bitstream as bitstream;
 
-use opus_sys::opus::*;
+use opus_sys::*;
 
 use structopt::StructOpt;
 
