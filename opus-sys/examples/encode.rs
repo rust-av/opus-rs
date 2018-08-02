@@ -113,7 +113,7 @@ fn main() {
             let mut val = 0i32;
             unsafe { opus_encoder_ctl(enc, OPUS_GET_FINAL_RANGE_REQUEST as i32, &mut val) };
             put_i32b(&mut b, val);
-            out_f.write_all(&b);
+            out_f.write_all(&b).unwrap();
 
             // Write the actual packet
             out_f.write_all(&out_buf[..ret as usize]).unwrap();
