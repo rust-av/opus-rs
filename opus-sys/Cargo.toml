@@ -17,4 +17,4 @@ opus = "1.1"
 
 [dev-dependencies]
 structopt = "0.2"
-av-bitstream = { version = "0.1.0", git = "https://github.com/rust-av/rust-av" }
+av-bitstream = "0.1"
