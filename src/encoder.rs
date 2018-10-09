@@ -326,12 +326,13 @@ mod encoder_trait {
                     };
 
                     match enc.encode(input_data, pkt.data.as_mut_slice()) {
-                        Ok(_) => {
+                        Ok(len) => {
                             let duration = (Rational64::new(len as i64 / channels as i64, 48000) / frame.t.timebase.unwrap()).to_integer();
                             pkt.t.pts = Some(pts);
                             pkt.t.dts = Some(pts);
                             pkt.t.duration = Some(duration as u64);
                             pts += duration;
+                            pkt.data.truncate(len);
                             pending.push_back(pkt);
                         },
                         Err(e) => {
