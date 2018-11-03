@@ -1,0 +1,14 @@
+language: rust
+rust:
+- nightly
+sudo: false
+install:
+- git clone https://git.xiph.org/opus.git
+- cd opus && ./autogen.sh && ./configure --prefix=$HOME/installed_opus && make && make install &&
+  cd ..
+- export PKG_CONFIG_PATH=$HOME/installed_opus/lib/pkgconfig:$PKG_CONFIG_PATH
+- export LD_LIBRARY_PATH=$HOME/installed_opus/lib:$LD_LIBRARY_PATH
+script:
+- cargo test --all-features
+- cargo test --no-default-features
+- cargo doc
