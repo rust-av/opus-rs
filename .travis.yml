@@ -11,4 +11,3 @@ install:
 script:
 - cargo test --all-features
 - cargo test --no-default-features
-- cargo doc
