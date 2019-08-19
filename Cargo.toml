@@ -14,13 +14,13 @@ codec-trait = ["av-codec", "av-bitstream", "av-data"]
 
 [dependencies]
 opus-sys = { version = "0.1.0", path = "opus-sys" }
-av-data = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
-av-bitstream = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
-av-codec = { version = "0.1.0", git = "https://github.com/rust-av/rust-av", optional = true }
+av-data = { version = "0.1.0", optional = true }
+av-bitstream = { version = "0.1.0", optional = true }
+av-codec = { version = "0.1.0", optional = true }
 
 [dev-dependencies]
 structopt = "0.2"
-av-bitstream = { version = "0.1.0", git = "https://github.com/rust-av/rust-av" }
+av-bitstream = "0.1.0"
 
 [workspace]
 members = ["opus-sys"]
