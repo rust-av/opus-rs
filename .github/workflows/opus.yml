@@ -1,0 +1,25 @@
+name: opus
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install opus
+      run: |
+        git clone https://github.com/xiph/opus.git
+        cd opus
+        ./autogen.sh 
+        ./configure --prefix=$HOME/opus_dir
+        make -j4
+        make install
+    - name: Run tests
+      run: |
+        export PKG_CONFIG_PATH=$HOME/opus_dir/lib/pkgconfig:$PKG_CONFIG_PATH
+        export LD_LIBRARY_PATH=$HOME/opus_dir/lib:$LD_LIBRARY_PATH
+        cargo test --all-features
+        cargo test --no-default-features

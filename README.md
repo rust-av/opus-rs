@@ -1,6 +1,8 @@
 # libopus bindings
 
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Actions Status](https://github.com/rust-av/opus-rs/workflows/opus/badge.svg)](https://github.com/rust-av/opus-rs/actions)
+
 
 It is a simple [binding][1] and safe abstraction over [libopus][2].
 
