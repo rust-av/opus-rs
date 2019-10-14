@@ -224,7 +224,7 @@ mod encoder_trait {
     }
 
     impl Descriptor for Des {
-        fn create(&self) -> Box<Encoder> {
+        fn create(&self) -> Box<dyn Encoder> {
             Box::new(Enc {
                 enc: None,
                 pending: VecDeque::new(),
@@ -419,7 +419,7 @@ mod encoder_trait {
         }
     }
 
-    pub const OPUS_DESCR: &Descriptor = &Des {
+    pub const OPUS_DESCR: &dyn Descriptor = &Des {
         descr: Descr {
             codec: "opus",
             name: "libopus",

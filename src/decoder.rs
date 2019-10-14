@@ -141,7 +141,7 @@ mod decoder_trait {
     }
 
     impl Descriptor for Des {
-        fn create(&self) -> Box<Decoder> {
+        fn create(&self) -> Box<dyn Decoder> {
             Box::new(Dec::new())
         }
 
@@ -238,7 +238,7 @@ mod decoder_trait {
         }
     }
 
-    pub const OPUS_DESCR: &Descriptor = &Des {
+    pub const OPUS_DESCR: &dyn Descriptor = &Des {
         descr: Descr {
             codec: "opus",
             name: "libopus",
