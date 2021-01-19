@@ -1,5 +1,5 @@
-use ffi::*;
 use common::*;
+use ffi::*;
 
 use std::ptr;
 
@@ -40,15 +40,19 @@ impl Decoder {
         }
     }
 
-    pub fn decode<'a, I, O>(&mut self, input: I, out: O, decode_fec: bool) -> Result<usize, ErrorCode>
+    pub fn decode<'a, I, O>(
+        &mut self,
+        input: I,
+        out: O,
+        decode_fec: bool,
+    ) -> Result<usize, ErrorCode>
     where
         I: Into<Option<&'a [u8]>>,
         O: Into<AudioBufferMut<'a>>,
     {
-        let (data, len) = input.into().map_or(
-            (ptr::null(), 0),
-            |v| (v.as_ptr(), v.len()),
-        );
+        let (data, len) = input
+            .into()
+            .map_or((ptr::null(), 0), |v| (v.as_ptr(), v.len()));
 
         let ret = match out.into() {
             AudioBufferMut::F32(v) => unsafe {
@@ -73,11 +77,14 @@ impl Decoder {
             },
         };
 
-        if ret < 0 { Err(ret.into()) } else { Ok(ret as usize) }
+        if ret < 0 {
+            Err(ret.into())
+        } else {
+            Ok(ret as usize)
+        }
     }
 
-    pub fn set_option(&mut self, key: u32, val: i32) -> Result<(), ErrorCode>
-    {
+    pub fn set_option(&mut self, key: u32, val: i32) -> Result<(), ErrorCode> {
         let ret = match key {
             OPUS_SET_GAIN_REQUEST => unsafe {
                 opus_multistream_decoder_ctl(self.dec, key as i32, val)
@@ -85,7 +92,11 @@ impl Decoder {
             _ => unimplemented!(),
         };
 
-        if ret < 0 { Err(ret.into()) } else { Ok(()) }
+        if ret < 0 {
+            Err(ret.into())
+        } else {
+            Ok(())
+        }
     }
 
     pub fn reset(&mut self) {
@@ -99,20 +110,19 @@ impl Drop for Decoder {
     }
 }
 
-
-#[cfg(feature="codec-trait")]
+#[cfg(feature = "codec-trait")]
 mod decoder_trait {
     use super::Decoder as OpusDecoder;
+    use bitstream::byteread::get_i16l;
     use codec::decoder::*;
     use codec::error::*;
-    use bitstream::byteread::get_i16l;
-    use data::packet::Packet;
-    use data::frame::*;
     use data::audiosample::formats::S16;
     use data::audiosample::ChannelMap;
-    use std::sync::Arc;
-    use std::collections::VecDeque;
+    use data::frame::*;
+    use data::packet::Packet;
     use ffi::OPUS_SET_GAIN_REQUEST;
+    use std::collections::VecDeque;
+    use std::sync::Arc;
 
     struct Des {
         descr: Descr,
@@ -127,7 +137,8 @@ mod decoder_trait {
 
     impl Dec {
         fn new() -> Self {
-            Dec { dec: None,
+            Dec {
+                dec: None,
                 extradata: None,
                 pending: VecDeque::with_capacity(1),
                 info: AudioInfo {
@@ -161,9 +172,11 @@ mod decoder_trait {
             let mut f = new_default_frame(self.info.clone(), Some(pkt.t.clone()));
 
             let ret = {
-                let buf : &mut [i16] = f.buf.as_mut_slice(0).unwrap();
+                let buf: &mut [i16] = f.buf.as_mut_slice(0).unwrap();
 
-                self.dec.as_mut().unwrap()
+                self.dec
+                    .as_mut()
+                    .unwrap()
                     .decode(pkt.data.as_slice(), buf, false)
                     .map_err(|_e| Error::InvalidData)
             };
@@ -175,8 +188,8 @@ mod decoder_trait {
                     }
                     self.pending.push_back(Arc::new(f));
                     Ok(())
-                },
-                Err(e) => Err(e)
+                }
+                Err(e) => Err(e),
             }
         }
         fn receive_frame(&mut self) -> Result<ArcFrame> {
@@ -188,7 +201,7 @@ mod decoder_trait {
             let mut gain_db = 0;
             let mut streams = 1;
             let mut coupled_streams = 0;
-            let mut mapping : &[u8] = &[0u8, 1u8];
+            let mut mapping: &[u8] = &[0u8, 1u8];
             let mut channel_map = false;
 
             if let Some(ref extradata) = self.extradata {
@@ -204,7 +217,7 @@ mod decoder_trait {
                     if streams + coupled_streams != channels {
                         unimplemented!()
                     }
-                    mapping = &extradata[OPUS_HEAD_SIZE + 2 ..]
+                    mapping = &extradata[OPUS_HEAD_SIZE + 2..]
                 } else {
                     if channels > 2 || channel_map {
                         return Err(Error::ConfigurationInvalid);
@@ -228,8 +241,8 @@ mod decoder_trait {
                     let _ = d.set_option(OPUS_SET_GAIN_REQUEST, gain_db as i32);
                     self.dec = Some(d);
                     Ok(())
-                },
-                Err(_) => Err(Error::ConfigurationInvalid)
+                }
+                Err(_) => Err(Error::ConfigurationInvalid),
             }
         }
 
@@ -249,5 +262,5 @@ mod decoder_trait {
     };
 }
 
-#[cfg(feature="codec-trait")]
+#[cfg(feature = "codec-trait")]
 pub use self::decoder_trait::OPUS_DESCR;
