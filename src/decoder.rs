@@ -132,10 +132,11 @@ mod decoder_trait {
                 pending: VecDeque::with_capacity(1),
                 info: AudioInfo {
                     samples: 960 * 6,
-                    rate: 48000,
+                    sample_rate: 48000,
                     map: ChannelMap::new(),
-                    format: Arc::new(S16)
-                }
+                    format: Arc::new(S16),
+                    block_len: None,
+                },
             }
         }
     }
