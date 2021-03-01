@@ -1,19 +1,12 @@
-extern crate libopus;
-#[macro_use]
-extern crate structopt;
-extern crate av_bitstream as bitstream;
-
 use libopus::decoder::*;
 
 use structopt::StructOpt;
-
-use std::mem;
 
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::PathBuf;
 
-use bitstream::byteread::get_i32b;
+use av_bitstream::byteread::get_i32b;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "decoder", about = "Opus decoding example")]
@@ -82,7 +75,7 @@ fn main() {
 
         if let Ok(ret) = dec.decode(&pkt[..len], &mut samples[..], false) {
             // Write the actual group of samples
-            let out = unsafe { slice::from_raw_parts(mem::transmute(samples.as_ptr()), ret as usize * 2) };
+            let out = unsafe { slice::from_raw_parts(samples.as_ptr() as *const u8, ret as usize * 2) };
             out_f.write_all(out).unwrap();
         } else {
             panic!("Cannot decode");

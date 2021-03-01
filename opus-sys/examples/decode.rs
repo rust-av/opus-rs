@@ -1,5 +1,4 @@
 extern crate opus_sys;
-#[macro_use]
 extern crate structopt;
 extern crate av_bitstream as bitstream;
 
@@ -7,7 +6,7 @@ use opus_sys::*;
 
 use structopt::StructOpt;
 
-use std::mem;
+use std::mem::MaybeUninit;
 
 use std::io::prelude::*;
 use std::fs::File;
@@ -41,8 +40,9 @@ trait Decode {
 
 impl Decode for DecodingOpts {
     fn get_decoder(&self) -> Option<*mut OpusDecoder> {
-        let mut err = unsafe { mem::uninitialized() };
-        let dec = unsafe { opus_decoder_create(self.sampling_rate, self.channels, &mut err) };
+        let mut err = MaybeUninit::uninit();
+        let dec = unsafe { opus_decoder_create(self.sampling_rate, self.channels, err.as_mut_ptr()) };
+        let err = unsafe { err.assume_init() };
 
         if err != OPUS_OK as i32 {
             None
@@ -91,7 +91,7 @@ fn main() {
 
         if ret > 0 {
             // Write the actual group of samples
-            let out = unsafe { slice::from_raw_parts(mem::transmute(samples.as_ptr()), ret as usize * 2) };
+            let out = unsafe { slice::from_raw_parts(samples.as_ptr() as *const u8, ret as usize * 2) };
             out_f.write_all(out).unwrap();
         } else {
             panic!("Cannot decode");

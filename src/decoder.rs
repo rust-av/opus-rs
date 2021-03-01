@@ -1,5 +1,5 @@
-use common::*;
-use ffi::*;
+use crate::common::*;
+use crate::ffi::*;
 
 use std::ptr;
 
@@ -34,8 +34,8 @@ impl Decoder {
             Err(err.into())
         } else {
             Ok(Decoder {
-                dec: dec,
-                channels: channels,
+                dec,
+                channels,
             })
         }
     }
@@ -157,7 +157,7 @@ mod decoder_trait {
             Box::new(Dec::new())
         }
 
-        fn describe<'a>(&'a self) -> &'a Descr {
+        fn describe(&self) -> &Descr {
             &self.descr
         }
     }

@@ -1,19 +1,12 @@
-extern crate libopus;
-#[macro_use]
-extern crate structopt;
-extern crate av_bitstream as bitstream;
-
 use libopus::encoder::*;
 
 use structopt::StructOpt;
-
-use std::mem;
 
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::PathBuf;
 
-use bitstream::bytewrite::put_i32b;
+use av_bitstream::bytewrite::put_i32b;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "encoder", about = "Opus encoding example")]
@@ -86,7 +79,7 @@ fn main() {
         in_f.read_exact(&mut buf).unwrap();
 
         let samples: &[i16] = unsafe {
-            slice::from_raw_parts(mem::transmute(buf.as_ptr()), frame_size)
+            slice::from_raw_parts(buf.as_ptr() as *const i16, frame_size)
         };
 
         processed_bytes += frame_size * 2;
