@@ -2,6 +2,7 @@
 name = "libopus"
 version = "0.1.0"
 authors = ["Luca Barbato <lu_zero@gentoo.org>"]
+edition = "2018"
 license = "MIT"
 description = "libopus bindings"
 repository = "https://github.com/rust-av/opus-rs"

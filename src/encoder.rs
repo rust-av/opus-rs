@@ -1,5 +1,6 @@
-use ffi::*;
-use common::*;
+use crate::ffi::*;
+use crate::common::*;
+use std::str::FromStr;
 
 pub struct Encoder {
     enc: *mut OpusMSEncoder,
@@ -56,14 +57,16 @@ pub enum Application {
     LowDelay = OPUS_APPLICATION_RESTRICTED_LOWDELAY as i32,
 }
 
-impl Application {
-    pub fn from_str<'a>(s : &'a str) -> Option<Self> {
+impl FromStr for Application {
+    type Err = ();
+
+    fn from_str(s : &str) -> Result<Self, Self::Err> {
         use self::Application::*;
         match s {
-            "voip" => Some(Voip),
-            "audio" => Some(Audio),
-            "lowdelay" => Some(LowDelay),
-            _ => None
+            "voip" => Ok(Voip),
+            "audio" => Ok(Audio),
+            "lowdelay" => Ok(LowDelay),
+            _ => Err(()),
         }
     }
 }
@@ -94,8 +97,8 @@ impl Encoder {
             Err(err.into())
         } else {
             Ok(Encoder {
-                enc: enc,
-                channels: channels,
+                enc,
+                channels,
             })
         }
     }
@@ -235,7 +238,7 @@ mod encoder_trait {
             })
         }
 
-        fn describe<'a>(&'a self) -> &'a Descr {
+        fn describe(&self) -> &Descr {
             &self.descr
         }
     }
@@ -360,7 +363,7 @@ mod encoder_trait {
                 ("streams", Value::U64(v)) => self.cfg.streams = v as usize,
                 ("coupled_streams", Value::U64(v)) => self.cfg.coupled_streams = v as usize,
                 ("application", Value::Str(s)) => {
-                    if let Some(a) = Application::from_str(s) {
+                    if let Ok(a) = s.parse() {
                         self.cfg.application = a;
                     } else {
                         return Err(Error::InvalidData);
@@ -431,8 +434,3 @@ mod encoder_trait {
 
 #[cfg(feature="codec-trait")]
 pub use self::encoder_trait::OPUS_DESCR;
-
-#[cfg(test)]
-pub(crate) mod tests {
-    use super::*;
-}

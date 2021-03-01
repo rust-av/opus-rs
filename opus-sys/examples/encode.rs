@@ -1,5 +1,4 @@
 extern crate opus_sys;
-#[macro_use]
 extern crate structopt;
 extern crate av_bitstream as bitstream;
 
@@ -7,7 +6,7 @@ use opus_sys::*;
 
 use structopt::StructOpt;
 
-use std::mem;
+use std::mem::MaybeUninit;
 
 use std::io::prelude::*;
 use std::fs::File;
@@ -44,8 +43,9 @@ trait Encode {
 
 impl Encode for EncodingOpts {
     fn get_encoder(&self) -> Option<*mut OpusEncoder> {
-        let mut err = unsafe { mem::uninitialized() };
-        let enc = unsafe { opus_encoder_create(self.sampling_rate, self.channels, OPUS_APPLICATION_AUDIO as i32, &mut err) };
+        let mut err = MaybeUninit::uninit();
+        let enc = unsafe { opus_encoder_create(self.sampling_rate, self.channels, OPUS_APPLICATION_AUDIO as i32, err.as_mut_ptr()) };
+        let err = unsafe { err.assume_init() };
 
         if err != OPUS_OK as i32 {
             None
@@ -91,7 +91,7 @@ fn main() {
         in_f.read_exact(&mut buf).unwrap();
 
         let samples = unsafe {
-            slice::from_raw_parts(mem::transmute(buf.as_ptr()), frame_size)
+            slice::from_raw_parts(buf.as_ptr() as *const i16, frame_size)
         };
 
         processed_bytes += frame_size * 2;
