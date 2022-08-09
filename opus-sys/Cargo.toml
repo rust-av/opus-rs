@@ -13,6 +13,9 @@ build = "build.rs"
 bindgen = "0.59"
 metadeps = "1.1"
 
+[target.'cfg(target_env = "msvc")'.build-dependencies]
+vcpkg = "0.2.11"
+
 [package.metadata.pkg-config]
 opus = "1.3"
 

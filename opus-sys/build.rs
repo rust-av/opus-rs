@@ -15,14 +15,42 @@ fn format_write(builder: bindgen::Builder) -> String {
         .replace("/*!", "/*")
 }
 
+#[cfg(not(target_env = "msvc"))]
+fn try_vcpkg(_statik: bool) -> Option<Vec<PathBuf>> {
+    None
+}
+
+#[cfg(target_env = "msvc")]
+fn try_vcpkg(statik: bool) -> Option<Vec<PathBuf>> {
+    if !statik {
+        env::set_var("VCPKGRS_DYNAMIC", "1");
+    }
+
+    vcpkg::find_package("opus")
+        .map_err(|e| {
+            println!("Could not find ffmpeg with vcpkg: {}", e);
+        })
+        .map(|library| library.include_paths)
+        .ok()
+}
+
 fn main() {
-    let libs = metadeps::probe().unwrap();
-    let headers = libs.get("opus").unwrap().include_paths.clone();
+    let mut include_sub_dir = "";
+    let headers = if let Some(paths) = try_vcpkg(false) {
+        include_sub_dir = "opus"; 
+        paths
+    } else {
+        let libs = metadeps::probe().unwrap();
+        let paths = libs.get("opus").unwrap().include_paths.clone();
+        paths
+    };
 
     let mut builder = bindgen::builder().header("data/opus.h");
 
     for header in headers {
-        builder = builder.clang_arg("-I").clang_arg(header.to_str().unwrap());
+        builder = builder
+            .clang_arg("-I")
+            .clang_arg(header.join(include_sub_dir).to_str().unwrap());
     }
 
     // Manually fix the comment so rustdoc won't try to pick them
