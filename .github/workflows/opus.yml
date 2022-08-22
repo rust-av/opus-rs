@@ -3,23 +3,50 @@ name: opus
 on: [push, pull_request]
 
 jobs:
-  build:
+
+  linux-tests:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Install opus
+    - uses: actions/checkout@v3
+
+    - name: Install libopus
       run: |
-        git clone https://github.com/xiph/opus.git
-        cd opus
-        ./autogen.sh 
-        ./configure --prefix=$HOME/opus_dir
-        make -j4
-        make install
+        sudo apt-get install libopus-dev
+
     - name: Run tests
       run: |
-        export PKG_CONFIG_PATH=$HOME/opus_dir/lib/pkgconfig:$PKG_CONFIG_PATH
-        export LD_LIBRARY_PATH=$HOME/opus_dir/lib:$LD_LIBRARY_PATH
-        cargo test --workspace --all-features
-        cargo test --workspace --no-default-features
+        cargo test --workspace --all-targets --all-features
+        cargo test --workspace --all-targets --no-default-features
+
+  windows-tests-gnu:
+
+    runs-on: windows-latest
+
+    env:
+      MSYSTEM: MINGW64
+      MSYS2_PATH_TYPE: inherit
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Rust Windows gnu
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable-x86_64-pc-windows-gnu
+        override: true
+
+    - name: Install msys2 packages
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: mingw-w64-x86_64-pkgconf mingw-w64-x86_64-opus
+        update: true
+
+    - name: Run tests
+      shell: msys2 {0}
+      run: |
+        cargo test --workspace --all-targets --all-features
+        cargo test --workspace --all-targets --no-default-features
