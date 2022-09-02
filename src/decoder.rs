@@ -9,6 +9,7 @@ pub struct Decoder {
 }
 
 unsafe impl Send for Decoder {} // TODO: Make sure it cannot be abused
+unsafe impl Sync for Decoder {} // TODO: Make sure it cannot be abused
 
 impl Decoder {
     pub fn create(
@@ -33,10 +34,7 @@ impl Decoder {
         if err < 0 {
             Err(err.into())
         } else {
-            Ok(Decoder {
-                dec,
-                channels,
-            })
+            Ok(Decoder { dec, channels })
         }
     }
 
@@ -124,11 +122,11 @@ mod decoder_trait {
     use std::collections::VecDeque;
     use std::sync::Arc;
 
-    struct Des {
+    pub struct Des {
         descr: Descr,
     }
 
-    struct Dec {
+    pub struct Dec {
         dec: Option<OpusDecoder>,
         extradata: Option<Vec<u8>>,
         pending: VecDeque<ArcFrame>,
@@ -153,8 +151,10 @@ mod decoder_trait {
     }
 
     impl Descriptor for Des {
-        fn create(&self) -> Box<dyn Decoder> {
-            Box::new(Dec::new())
+        type OutputDecoder = Dec;
+
+        fn create(&self) -> Self::OutputDecoder {
+            Dec::new()
         }
 
         fn describe(&self) -> &Descr {
@@ -169,7 +169,7 @@ mod decoder_trait {
             self.extradata = Some(Vec::from(extra));
         }
         fn send_packet(&mut self, pkt: &Packet) -> Result<()> {
-            let mut f = new_default_frame(self.info.clone(), Some(pkt.t.clone()));
+            let mut f = Frame::new_default_frame(self.info.clone(), Some(pkt.t.clone()));
 
             let ret = {
                 let buf: &mut [i16] = f.buf.as_mut_slice(0).unwrap();
@@ -252,7 +252,7 @@ mod decoder_trait {
         }
     }
 
-    pub const OPUS_DESCR: &dyn Descriptor = &Des {
+    pub const OPUS_DESCR: &Des = &Des {
         descr: Descr {
             codec: "opus",
             name: "libopus",

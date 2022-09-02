@@ -1,5 +1,5 @@
-use crate::ffi::*;
 use crate::common::*;
+use crate::ffi::*;
 use std::str::FromStr;
 
 pub struct Encoder {
@@ -8,41 +8,41 @@ pub struct Encoder {
 }
 
 mod constants {
-    pub use  ffi::OPUS_SET_APPLICATION_REQUEST;
-    pub use  ffi::OPUS_SET_BITRATE_REQUEST ;
-    pub use  ffi::OPUS_SET_MAX_BANDWIDTH_REQUEST ;
-    pub use  ffi::OPUS_SET_VBR_REQUEST ;
-    pub use  ffi::OPUS_SET_BANDWIDTH_REQUEST ;
-    pub use  ffi::OPUS_SET_COMPLEXITY_REQUEST ;
-    pub use  ffi::OPUS_SET_INBAND_FEC_REQUEST ;
-    pub use  ffi::OPUS_SET_PACKET_LOSS_PERC_REQUEST ;
-    pub use  ffi::OPUS_SET_DTX_REQUEST ;
-    pub use  ffi::OPUS_SET_VBR_CONSTRAINT_REQUEST ;
-    pub use  ffi::OPUS_SET_FORCE_CHANNELS_REQUEST ;
-    pub use  ffi::OPUS_SET_SIGNAL_REQUEST ;
-    pub use  ffi::OPUS_SET_GAIN_REQUEST ;
-    pub use  ffi::OPUS_SET_LSB_DEPTH_REQUEST ;
-    pub use  ffi::OPUS_SET_EXPERT_FRAME_DURATION_REQUEST ;
-    pub use  ffi::OPUS_SET_PREDICTION_DISABLED_REQUEST;
+    pub use ffi::OPUS_SET_APPLICATION_REQUEST;
+    pub use ffi::OPUS_SET_BANDWIDTH_REQUEST;
+    pub use ffi::OPUS_SET_BITRATE_REQUEST;
+    pub use ffi::OPUS_SET_COMPLEXITY_REQUEST;
+    pub use ffi::OPUS_SET_DTX_REQUEST;
+    pub use ffi::OPUS_SET_EXPERT_FRAME_DURATION_REQUEST;
+    pub use ffi::OPUS_SET_FORCE_CHANNELS_REQUEST;
+    pub use ffi::OPUS_SET_GAIN_REQUEST;
+    pub use ffi::OPUS_SET_INBAND_FEC_REQUEST;
+    pub use ffi::OPUS_SET_LSB_DEPTH_REQUEST;
+    pub use ffi::OPUS_SET_MAX_BANDWIDTH_REQUEST;
+    pub use ffi::OPUS_SET_PACKET_LOSS_PERC_REQUEST;
+    pub use ffi::OPUS_SET_PREDICTION_DISABLED_REQUEST;
+    pub use ffi::OPUS_SET_SIGNAL_REQUEST;
+    pub use ffi::OPUS_SET_VBR_CONSTRAINT_REQUEST;
+    pub use ffi::OPUS_SET_VBR_REQUEST;
 
-    pub use ffi::OPUS_GET_LOOKAHEAD_REQUEST;
     pub use ffi::OPUS_GET_FINAL_RANGE_REQUEST;
+    pub use ffi::OPUS_GET_LOOKAHEAD_REQUEST;
 
-    pub use ffi::OPUS_BANDWIDTH_NARROWBAND;
-    pub use ffi::OPUS_BANDWIDTH_MEDIUMBAND;
-    pub use ffi::OPUS_BANDWIDTH_WIDEBAND;
-    pub use ffi::OPUS_BANDWIDTH_SUPERWIDEBAND;
     pub use ffi::OPUS_BANDWIDTH_FULLBAND;
-    pub use ffi::OPUS_FRAMESIZE_ARG;
-    pub use ffi::OPUS_FRAMESIZE_2_5_MS;
-    pub use ffi::OPUS_FRAMESIZE_5_MS;
+    pub use ffi::OPUS_BANDWIDTH_MEDIUMBAND;
+    pub use ffi::OPUS_BANDWIDTH_NARROWBAND;
+    pub use ffi::OPUS_BANDWIDTH_SUPERWIDEBAND;
+    pub use ffi::OPUS_BANDWIDTH_WIDEBAND;
+    pub use ffi::OPUS_FRAMESIZE_100_MS;
     pub use ffi::OPUS_FRAMESIZE_10_MS;
+    pub use ffi::OPUS_FRAMESIZE_120_MS;
     pub use ffi::OPUS_FRAMESIZE_20_MS;
+    pub use ffi::OPUS_FRAMESIZE_2_5_MS;
     pub use ffi::OPUS_FRAMESIZE_40_MS;
+    pub use ffi::OPUS_FRAMESIZE_5_MS;
     pub use ffi::OPUS_FRAMESIZE_60_MS;
     pub use ffi::OPUS_FRAMESIZE_80_MS;
-    pub use ffi::OPUS_FRAMESIZE_100_MS;
-    pub use ffi::OPUS_FRAMESIZE_120_MS;
+    pub use ffi::OPUS_FRAMESIZE_ARG;
 }
 
 pub use self::constants::*;
@@ -60,7 +60,7 @@ pub enum Application {
 impl FromStr for Application {
     type Err = ();
 
-    fn from_str(s : &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         use self::Application::*;
         match s {
             "voip" => Ok(Voip),
@@ -96,10 +96,7 @@ impl Encoder {
         if err < 0 {
             Err(err.into())
         } else {
-            Ok(Encoder {
-                enc,
-                channels,
-            })
+            Ok(Encoder { enc, channels })
         }
     }
 
@@ -128,7 +125,11 @@ impl Encoder {
             },
         };
 
-        if ret < 0 { Err(ret.into()) } else { Ok(ret as usize) }
+        if ret < 0 {
+            Err(ret.into())
+        } else {
+            Ok(ret as usize)
+        }
     }
 
     pub fn set_option(&mut self, key: u32, val: u32) -> Result<(), ErrorCode> {
@@ -155,19 +156,26 @@ impl Encoder {
             _ => unimplemented!(),
         };
 
-        if ret < 0 { Err(ret.into()) } else { Ok(()) }
+        if ret < 0 {
+            Err(ret.into())
+        } else {
+            Ok(())
+        }
     }
     pub fn get_option(&self, key: u32) -> Result<i32, ErrorCode> {
         let mut val: i32 = 0;
         let ret = match key {
-            OPUS_GET_LOOKAHEAD_REQUEST |
-            OPUS_GET_FINAL_RANGE_REQUEST => unsafe {
+            OPUS_GET_LOOKAHEAD_REQUEST | OPUS_GET_FINAL_RANGE_REQUEST => unsafe {
                 opus_multistream_encoder_ctl(self.enc, key as i32, &mut val as *mut i32)
             },
             _ => unimplemented!(),
         };
 
-        if ret < 0 { Err(ret.into()) } else { Ok(val) }
+        if ret < 0 {
+            Err(ret.into())
+        } else {
+            Ok(val)
+        }
     }
 
     pub fn reset(&mut self) {
@@ -181,24 +189,24 @@ impl Drop for Encoder {
     }
 }
 
-#[cfg(feature="codec-trait")]
+#[cfg(feature = "codec-trait")]
 mod encoder_trait {
-    use super::Encoder as OpusEncoder;
-    use super::Application;
     use super::constants::*;
+    use super::Application;
+    use super::Encoder as OpusEncoder;
     // use std::rc::Rc;
     use codec::encoder::*;
     use codec::error::*;
-    use data::audiosample::ChannelMap;
     use data::audiosample::formats::S16;
-    use data::value::Value;
-    use data::frame::{ArcFrame, MediaKind, FrameBufferConv};
+    use data::audiosample::ChannelMap;
+    use data::frame::{ArcFrame, FrameBufferConv, MediaKind};
     use data::packet::Packet;
-    use data::rational::Rational64;
     use data::params::CodecParams;
+    use data::rational::Rational64;
+    use data::value::Value;
     use std::collections::VecDeque;
 
-    struct Des {
+    pub struct Des {
         descr: Descr,
     }
 
@@ -213,11 +221,13 @@ mod encoder_trait {
 
     impl Cfg {
         fn is_valid(&self) -> bool {
-            self.channels > 0 && self.streams + self.coupled_streams == self.channels && self.mapping.len() == self.channels
+            self.channels > 0
+                && self.streams + self.coupled_streams == self.channels
+                && self.mapping.len() == self.channels
         }
     }
 
-    struct Enc {
+    pub struct Enc {
         enc: Option<OpusEncoder>,
         pending: VecDeque<Packet>,
         frame_size: usize,
@@ -227,15 +237,24 @@ mod encoder_trait {
     }
 
     impl Descriptor for Des {
-        fn create(&self) -> Box<dyn Encoder> {
-            Box::new(Enc {
+        type OutputEncoder = Enc;
+
+        fn create(&self) -> Self::OutputEncoder {
+            Enc {
                 enc: None,
                 pending: VecDeque::new(),
                 frame_size: 960,
                 delay: 0,
-                cfg: Cfg { channels: 0, streams: 0, coupled_streams: 0, mapping: vec![0, 1], application: Application::Audio, bitrate: 16000 },
+                cfg: Cfg {
+                    channels: 0,
+                    streams: 0,
+                    coupled_streams: 0,
+                    mapping: vec![0, 1],
+                    application: Application::Audio,
+                    bitrate: 16000,
+                },
                 flushing: false,
-            })
+            }
         }
 
         fn describe(&self) -> &Descr {
@@ -247,9 +266,9 @@ mod encoder_trait {
     // A packet may contain up to 3 frames, each of 1275 bytes max.
     // The packet header may be up to 7 bytes long.
 
-    const MAX_HEADER_SIZE : usize = 7;
-    const MAX_FRAME_SIZE : usize = 1275;
-    const MAX_FRAMES : usize = 3;
+    const MAX_HEADER_SIZE: usize = 7;
+    const MAX_FRAME_SIZE: usize = 1275;
+    const MAX_FRAMES: usize = 3;
 
     /// 80ms in samples
     const CONVERGENCE_WINDOW: usize = 3840;
@@ -258,18 +277,24 @@ mod encoder_trait {
         fn configure(&mut self) -> Result<()> {
             if self.enc.is_none() {
                 if self.cfg.is_valid() {
-                    let mut enc = OpusEncoder::create(48000, // TODO
+                    let mut enc = OpusEncoder::create(
+                        48000, // TODO
                         self.cfg.channels,
                         self.cfg.streams,
                         self.cfg.coupled_streams,
                         &self.cfg.mapping,
-                        self.cfg.application).map_err(|_e| unimplemented!())?;
-                    enc.set_option(OPUS_SET_BITRATE_REQUEST, self.cfg.bitrate as u32).unwrap();
-                    enc.set_option(OPUS_SET_BANDWIDTH_REQUEST, OPUS_BANDWIDTH_WIDEBAND).unwrap();
+                        self.cfg.application,
+                    )
+                    .map_err(|_e| unimplemented!())?;
+                    enc.set_option(OPUS_SET_BITRATE_REQUEST, self.cfg.bitrate as u32)
+                        .unwrap();
+                    enc.set_option(OPUS_SET_BANDWIDTH_REQUEST, OPUS_BANDWIDTH_WIDEBAND)
+                        .unwrap();
                     enc.set_option(OPUS_SET_COMPLEXITY_REQUEST, 10).unwrap();
                     enc.set_option(OPUS_SET_VBR_REQUEST, 0).unwrap();
                     enc.set_option(OPUS_SET_VBR_CONSTRAINT_REQUEST, 0).unwrap();
-                    enc.set_option(OPUS_SET_PACKET_LOSS_PERC_REQUEST, 0).unwrap();
+                    enc.set_option(OPUS_SET_PACKET_LOSS_PERC_REQUEST, 0)
+                        .unwrap();
 
                     self.delay = enc.get_option(OPUS_GET_LOOKAHEAD_REQUEST).unwrap() as usize;
                     self.enc = Some(enc);
@@ -308,7 +333,7 @@ mod encoder_trait {
             if let MediaKind::Audio(ref info) = frame.kind {
                 let channels = info.map.len();
                 let input_size = info.samples * channels;
-                let input : &[i16] = frame.buf.as_slice(0).unwrap();
+                let input: &[i16] = frame.buf.as_slice(0).unwrap();
                 let data_size = MAX_HEADER_SIZE + MAX_FRAMES * MAX_FRAME_SIZE;
                 let chunk_size = self.frame_size * channels;
                 let mut buf = Vec::with_capacity(chunk_size);
@@ -330,19 +355,19 @@ mod encoder_trait {
 
                     match enc.encode(input_data, pkt.data.as_mut_slice()) {
                         Ok(len) => {
-                            let duration = (Rational64::new(len as i64 / channels as i64, 48000) / frame.t.timebase.unwrap()).to_integer();
+                            let duration = (Rational64::new(len as i64 / channels as i64, 48000)
+                                / frame.t.timebase.unwrap())
+                            .to_integer();
                             pkt.t.pts = Some(pts);
                             pkt.t.dts = Some(pts);
                             pkt.t.duration = Some(duration as u64);
                             pts += duration;
                             pkt.data.truncate(len);
                             pending.push_back(pkt);
-                        },
-                        Err(e) => {
-                            match e {
-                                _ => unimplemented!()
-                            }
                         }
+                        Err(e) => match e {
+                            _ => unimplemented!(),
+                        },
                     }
                 }
                 Ok(())
@@ -368,7 +393,7 @@ mod encoder_trait {
                     } else {
                         return Err(Error::InvalidData);
                     }
-                },
+                }
                 _ => return Err(Error::Unsupported("Unsupported option".to_owned())),
             }
 
@@ -385,11 +410,7 @@ mod encoder_trait {
                         self.cfg.channels = map.len();
                         self.cfg.coupled_streams = self.cfg.channels - 1;
                         self.cfg.streams = 1;
-                        self.cfg.mapping = if map.len() > 1 {
-                            vec![0, 1]
-                        } else {
-                            vec![0]
-                        };
+                        self.cfg.mapping = if map.len() > 1 { vec![0, 1] } else { vec![0] };
                     }
                 }
             }
@@ -399,8 +420,8 @@ mod encoder_trait {
         // TODO: guard against calling it before configure()
         // is issued.
         fn get_params(&self) -> Result<CodecParams> {
-            use std::sync::Arc;
             use data::params::*;
+            use std::sync::Arc;
             Ok(CodecParams {
                 kind: Some(MediaKind::Audio(AudioInfo {
                     rate: 48000,
@@ -422,7 +443,7 @@ mod encoder_trait {
         }
     }
 
-    pub const OPUS_DESCR: &dyn Descriptor = &Des {
+    pub const OPUS_DESCR: &Des = &Des {
         descr: Descr {
             codec: "opus",
             name: "libopus",
@@ -432,5 +453,5 @@ mod encoder_trait {
     };
 }
 
-#[cfg(feature="codec-trait")]
+#[cfg(feature = "codec-trait")]
 pub use self::encoder_trait::OPUS_DESCR;
