@@ -365,9 +365,7 @@ mod encoder_trait {
                             pkt.data.truncate(len);
                             pending.push_back(pkt);
                         }
-                        Err(e) => match e {
-                            _ => unimplemented!(),
-                        },
+                        Err(_) => unimplemented!(),
                     }
                 }
                 Ok(())

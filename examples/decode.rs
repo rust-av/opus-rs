@@ -2,8 +2,8 @@ use libopus::decoder::*;
 
 use structopt::StructOpt;
 
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
 use std::path::PathBuf;
 
 use av_bitstream::byteread::get_i32b;
@@ -23,9 +23,9 @@ struct DecodingOpts {
     /// Channels, either 1 or 2
     #[structopt(default_value = "1")]
     channels: usize,
-    /// Number of seconds to decode
+    /*/// Number of seconds to decode
     #[structopt(default_value = "10")]
-    seconds: i32,
+    seconds: i32,*/
 }
 
 trait Decode {
@@ -39,7 +39,14 @@ impl Decode for DecodingOpts {
         }
 
         let coupled_streams = if self.channels > 1 { 1 } else { 0 };
-        Decoder::create(self.sampling_rate, self.channels, 1, coupled_streams, &[0u8, 1u8]).ok()
+        Decoder::create(
+            self.sampling_rate,
+            self.channels,
+            1,
+            coupled_streams,
+            &[0u8, 1u8],
+        )
+        .ok()
     }
 }
 
@@ -75,7 +82,8 @@ fn main() {
 
         if let Ok(ret) = dec.decode(&pkt[..len], &mut samples[..], false) {
             // Write the actual group of samples
-            let out = unsafe { slice::from_raw_parts(samples.as_ptr() as *const u8, ret as usize * 2) };
+            let out =
+                unsafe { slice::from_raw_parts(samples.as_ptr() as *const u8, ret as usize * 2) };
             out_f.write_all(out).unwrap();
         } else {
             panic!("Cannot decode");

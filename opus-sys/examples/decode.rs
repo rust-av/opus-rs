@@ -1,6 +1,6 @@
+extern crate av_bitstream as bitstream;
 extern crate opus_sys;
 extern crate structopt;
-extern crate av_bitstream as bitstream;
 
 use opus_sys::*;
 
@@ -8,8 +8,8 @@ use structopt::StructOpt;
 
 use std::mem::MaybeUninit;
 
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
 use std::path::PathBuf;
 
 use bitstream::byteread::get_i32b;
@@ -29,9 +29,9 @@ struct DecodingOpts {
     /// Channels, either 1 or 2
     #[structopt(default_value = "1")]
     channels: i32,
-    /// Number of seconds to decode
+    /*/// Number of seconds to decode
     #[structopt(default_value = "10")]
-    seconds: i32,
+    seconds: i32,*/
 }
 
 trait Decode {
@@ -41,7 +41,8 @@ trait Decode {
 impl Decode for DecodingOpts {
     fn get_decoder(&self) -> Option<*mut OpusDecoder> {
         let mut err = MaybeUninit::uninit();
-        let dec = unsafe { opus_decoder_create(self.sampling_rate, self.channels, err.as_mut_ptr()) };
+        let dec =
+            unsafe { opus_decoder_create(self.sampling_rate, self.channels, err.as_mut_ptr()) };
         let err = unsafe { err.assume_init() };
 
         if err != OPUS_OK as i32 {
@@ -84,14 +85,20 @@ fn main() {
         in_f.read_exact(&mut pkt[..len]).expect("End of file");
 
         let ret = unsafe {
-            opus_decode(dec,
-                        pkt.as_ptr(), pkt.len() as i32,
-                        samples.as_mut_ptr(), samples.len() as i32, 0)
+            opus_decode(
+                dec,
+                pkt.as_ptr(),
+                pkt.len() as i32,
+                samples.as_mut_ptr(),
+                samples.len() as i32,
+                0,
+            )
         };
 
         if ret > 0 {
             // Write the actual group of samples
-            let out = unsafe { slice::from_raw_parts(samples.as_ptr() as *const u8, ret as usize * 2) };
+            let out =
+                unsafe { slice::from_raw_parts(samples.as_ptr() as *const u8, ret as usize * 2) };
             out_f.write_all(out).unwrap();
         } else {
             panic!("Cannot decode");
